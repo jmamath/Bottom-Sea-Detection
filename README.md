@@ -14,14 +14,19 @@ Data has been provided by IRD (Institut de Recherche et Développement), it cons
   * Filtering.mat ~ 47.12 GB
 
 The datasets and the procedure to get them is described in the File Data *Matecho_UserManual_18_05_2017.pdf* 
-I also add a screen shot of all the variables of each dataset. After having discussed further with the team of experts it seems that the following variables were relevant to learn from data : Time, Latitude, Longitude, Echogram, Depth and CleanBottom. We describe it for the 2011 campaign because the structure of the data are similar in 2015. Echogram and Depth correspond respectively to Echogram18 and Depth18 since we always take the lowest frequency (18 kHz) to draw the bottom line (Mainly because low frequency goes deeper). 
+We describe it for the 2011 campaign because the structure of the data are similar in 2015.
+I added a screen shot of all the variables of the following datasets Echogram, Filtering (see Filtering.jpg and Echogram.jpg in /Data). After having discussed further with the team of experts it seems that the following variables were relevant to learn from data : Time, Latitude, Longitude, Echogram, Depth and CleanBottom. Echogram and Depth correspond respectively to Echogram18 and Depth18 since we always take the lowest frequency (18 kHz) to draw the bottom line (Mainly because low frequency goes deeper). 
 * Echogram is associated with Depth, in fact for every value of depth there is an echogram.
 * Depth has 2581 values each spaced by 0.1916m. `min(Depth) = 5.5`, `max(Depth) = 499.86928`
-* CleanBottom is the values of the bottom set by the expert.
+* CleanBottom are the values of the bottom set by the expert.
 * Time : numbers of second since January 1st 1970.
 
 In summary data can be viewed as a snapchot of the water where at each time (ping) we have diverses values.
 Hence we subset our training set using those variables. 
+
+### Subsetting Methodology
+Data has been given within a hard disk drive (HDD), so the following is made (for reproductibility purposes) to help someone with the same disk getting the same results.
+Here we have selected 100000 values, we provide Matlab scripts to subset a training set and a test set, both can be found in the folder Matlab. The interface for the user are the scripts `Get_TrainingSet.m` and `Get_TestSet.m`. There, one can change how many examples he wants (less or more than 100000). When executed the scripts output the dataset Training.mat and Test.mat in the root directory of the HDD. Here is how it looks:
 
 | Name        | Size           | Class  |
 | ------------- |:-------------:| -----:|
@@ -32,11 +37,29 @@ Hence we subset our training set using those variables.
 | Echogram | (2581,100000)    |    single |
 | Time | (1,100000)     |    double |
 
-Here we select 100000 values, the Matlab script used to subset our training and test set is given in the file *Preprocessing*
+Since we are dealing with time series, and that there is 2661063 pings we made a script `RandSelectOne.m`
+(that must be present in each folder containing Echogram.mat and Filtering.mat) that randomly select a number between 1 and 2661063 so that you can subset 100000 straigt values.
 
 
+## Modeling Methodology
 
+### Feature Selection and Problem Settings
+Before starting any modeling we needed to know the kind of problem we may refer on.Clearly we can frame it as a supervised learning problem, where the variable to predict is CleanBottom that we rename Y, doing so, our explanatory variable will be X a DataFrame with all other data without Depth. In summary
+* Y = CleanBottom 
+* X = Latitude, Longitude, Echogram, Time.
 
-## Methodology
+We want our settings to be general enought to be applied with the data of the 2015 campaign. At first we wanted to treat it as a multi class classification problem with 2581 different classes. The problem with this approach is that it would not help us apply our model to data from a different distribution, in fact the 2015 campaing as a different Depth structure, the spacing between the different values is different than 0.1916, and has different total values. Hence, in a first time we opted for a regression problem. Then our error would be measure in metres.
+
+### Linear Model
+Following Occam's razor principle, we opted to fit simple linear model to see how much we could explain just with linear assumptions.
+#### Preprocessing
+The experts are not interested with bottom values greater than 500m. CleanBottom have values greater than 500m that had been found with a complete version of Echogram, but the Echogram we got was sharped to the first 500m for data volume issues.
+Then we set all values of CleanBottom greater or equal than 500m to 500.
+There was still a problem, in fact Echogram had too much data and had a lot of Nan values. What a problem at first revealed itself to be an opportunity. After some discussion with the experts, the origin of the Nan values was clear. In fact for example if we take an arbitrary ping and that the bottom is at 100m depth, all the values deeper in echogram will be Nan. We then had a glimpse of the bottom values from Echogram just with the Nan distribution.
+Thus we created a new variable that gaves at each ping the depth of the last non-Nan value we call it PingDepth.
+After some plotting it seemed that both CleanBottom and PingDepth had the same structure.
+
+![Alt text](Plots/PingDepth_CleanBottom.png.png?raw=false "Title")
+
 
 ## Result
