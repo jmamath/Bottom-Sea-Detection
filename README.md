@@ -13,7 +13,28 @@ Data has been provided by IRD (Institut de Recherche et Développement), it cons
   * Echogram.mat ~ 30.45 GB
   * Filtering.mat ~ 47.12 GB
 
-The datasets and the procedure to get them is described in the File Data *Matecho_UserManual_18_05_2017.docx* I also add a screen shot of all the variables of each dataset 
+The datasets and the procedure to get them is described in the File Data *Matecho_UserManual_18_05_2017.pdf* 
+I also add a screen shot of all the variables of each dataset. After having discussed further with the team of experts it seems that the following variables were relevant to learn from data : Time, Latitude, Longitude, Echogram, Depth and CleanBottom. We describe it for the 2011 campaign because the structure of the data are similar in 2015. Echogram and Depth correspond respectively to Echogram18 and Depth18 since we always take the lowest frequency (18 kHz) to draw the bottom line (Mainly because low frequency goes deeper). 
+* Echogram is associated with Depth, in fact for every value of depth there is an echogram.
+* Depth has 2581 values each spaced by 0.1916m. `min(Depth) = 5.5`, `max(Depth) = 499.86928`
+* CleanBottom is the values of the bottom set by the expert.
+* Time : numbers of second since January 1st 1970.
+
+In summary data can be viewed as a snapchot of the water where at each time (ping) we have diverses values.
+Hence we subset our training set using those variables. 
+
+| Name        | Size           | Class  |
+| ------------- |:-------------:| -----:|
+| CleanBottom      | (1,100000) | double |
+| Depth      | (1,2581)     |   double |
+| Latitude | (1,100000)      |  double |
+| Longitude | (1,100000)      |   double |
+| Echogram | (2581,100000)    |    single |
+| Time | (1,100000)     |    double |
+
+Here we select 100000 values, the Matlab script used to subset our training and test set is given in the file *Preprocessing*
+
+
 
 
 ## Methodology
