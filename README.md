@@ -59,7 +59,7 @@ There was still a problem, in fact Echogram had too much data and had a lot of N
 Thus we created a new variable that gaves at each ping the depth of the last non-Nan value we call it PingDepth.
 After some plotting it seemed that both CleanBottom and PingDepth had the same structure.
 
-![Alt text](Plots/PingDepth_CleanBottom.png.png?raw=false "Title")
+![Alt text](Plots/PingDepth_CleanBottom.png?raw=false "Title")
 
 
-## Result
+## Results
