@@ -40,6 +40,7 @@ Here we have selected 100000 values, we provide Matlab scripts to subset a train
 Since we are dealing with time series, and that there is 2661063 pings we made a script `RandSelectOne.m`
 (that must be present in each folder containing Echogram.mat and Filtering.mat) that randomly select a number between 1 and 2661063 so that you can subset 100000 straigt values.
 
+Note : we have such a abundance of data that we decided to select as many examples in our training and test set.
 
 ## Modeling Methodology
 
@@ -59,7 +60,15 @@ There was still a problem, in fact Echogram had too much data and had a lot of N
 Thus we created a new variable that gaves at each ping the depth of the last non-Nan value we call it PingDepth.
 After some plotting it seemed that both CleanBottom and PingDepth had the same structure.
 
-![Alt text](Plots/PingDepth_CleanBottom.png?raw=false "Title")
+![Alt text](Plots/PingDepth_CleanBottom1.png?raw=false "Training Set")
+![Alt text](Plots/PingDepth_CleanBottom2.png?raw=false "Training Set")
+
+We also changed Echogram to get Echolight, a lighted version of Echogram, for each ping we select only the value of the last non Nan echo. In summary 
+* X = PingDepth, Echolight, Latitude, Longitude
+* Y = CleanBottom (with values greater than 500m set to 500m)
+
+We removed Time because it has some Nan values.
+Then we fitted the model using sklearn a machine learning module in Python.
+The Mean Absolute Error was 5.86, not bad.
 
 
-## Results
