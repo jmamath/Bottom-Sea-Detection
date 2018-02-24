@@ -60,8 +60,12 @@ There was still a problem, in fact Echogram had too much data and had a lot of N
 Thus we created a new variable that gaves at each ping the depth of the last non-Nan value we call it PingDepth.
 After some plotting it seemed that both CleanBottom and PingDepth had the same structure.
 
-![Alt text](Plots/PingDepth_CleanBottom1.png?raw=false "Training Set")
-![Alt text](Plots/PingDepth_CleanBottom2.png?raw=false "Training Set")
+![Alt text](Plots/Training_2011.png?raw=false "Training Set")
+![Alt text](Plots/Test_2011.png?raw=false "Training Set")
+
+
+![Alt text](Plots/Training_2015.png?raw=false "Training Set")
+![Alt text](Plots/Test_2015.png?raw=false "Training Set")
 
 We also changed Echogram to get Echolight, a lighted version of Echogram, for each ping we select only the value of the last non Nan echo. In summary 
 * X = PingDepth, Echolight, Latitude, Longitude
