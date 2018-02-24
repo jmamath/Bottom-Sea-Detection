@@ -16,7 +16,8 @@ The datasets and the procedure to get them is described in here /Data/Matecho_Us
 A screenshot of the variables and a descriptive file are present in:
 * Data/2011 - three files Echogram_variables.jpg, Filtering_variables.jpg and Parameters_2011.txt
 * Data/2015 - three files Echogram_variables.jpg, Filtering_variables.jpg and Parameters_2015.txt
- After having discussed with the experts' team it seems that the following variables were relevant to learn from data: Time, Latitude, Longitude, Echogram, Depth, and CleanBottom. Echogram and Depth correspond respectively to Echogram18 and Depth18 since we always take the lowest frequency (18 kHz) to draw the bottom line (Mainly because low frequency goes deeper). 
+
+After having discussed with the experts' team it seems that the following variables were relevant to learn from data: Time, Latitude, Longitude, Echogram, Depth, and CleanBottom. Echogram and Depth correspond respectively to Echogram18 and Depth18 since we always take the lowest frequency (18 kHz) to draw the bottom line (Mainly because low frequency goes deeper). 
 * Echogram is associated with Depth, in fact for every value of depth there is an echogram.
 * Depth is a grid with a regular spacing and each cell correspond to a value of depth in meters
 * CleanBottom are the values of the bottom set by the expert.
