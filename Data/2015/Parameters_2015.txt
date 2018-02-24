@@ -1,0 +1,61 @@
+Name: 2015
+
+
+Input file path         : I:\Senegal_BEI500\2015\ConvertedHac\
+Save file path          : I:\Senegal_BEI500\2015\ConvertedHac\Cruise_2015\
+Treatment save file path: I:\Senegal_BEI500\2015\ConvertedHac\Cruise_2015\Treatment20170731_175534\
+
+Number of input cruise files: 4178 
+
+Transducer depth: 7.5 m
+
+Frequencies            : 18000   38000  120000  200000 Hz
+Cut Range              : 500  500  250  120 m
+
+Common beam spacing    : 0.1919     0.1919     0.1919     0.1919 m
+Number of depth samples: 2567        2567        1264         587
+
+Minimal Range          : 17.285      17.285      17.285      17.285 m
+Maximal Range          : 499.84      499.84      249.83      119.94 m
+
+Apply lowest frequency bottom to other: YES
+Minimal bottom depth   : 8.267       8.267       8.267       8.267 m
+Maximal bottom depth   : 1003.3      1003.3      1003.3      1003.3 m
+
+Date limits            : from 2015-10-22 07:45:46.696 to 2015-12-09 08:48:21.293
+Start and end positions: from (13.36∞,-17.42∞) to (34.15∞,-7.486∞)
+Total distance         : 7882.0764 nmi
+
+Total number of pings        : 3935655
+Total number of valid pings  : 3672164
+Total number of removed pings: 263491
+
+
+****************
+** FILTERINGS **
+
+Number of removed pings by filter type [filter parameters]:
+   Bad time      : 4
+   Bad bottom    : 15699
+   Cleaning      : 2946
+   Low ship speed: 244842 [Minimal Ship speed: 2 knots]
+   Deep spike    : Not applied
+   Blank ping    : Not applied
+
+Unparasite filter     : Not apply
+
+Noise Reduction filter: Not apply
+
+
+****************
+** TREATMENTS **
+
+Echointegration: Not apply
+
+Shoal extraction: Not apply
+
+
+****************************
+** BIFREQUENCY TREATMENTS **
+
+Bifrequency: Not apply
