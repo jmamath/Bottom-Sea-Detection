@@ -22,15 +22,16 @@ from sklearn.model_selection import train_test_split
 
 ########## 1.1 - Loading the training set and test set
 
-training = sio.loadmat('Training.mat', squeeze_me=True)
-test = sio.loadmat('Test.mat', squeeze_me=True)
+training = sio.loadmat('Training_2015.mat', squeeze_me=True)
+test = sio.loadmat('Testset_2011.mat', squeeze_me=True)
 
 # Get variables names, both dataset have the same variables
 training.keys()
 
 # Extracting variables
 # Depth is the same in both dataset
-Depth = training['Depth']
+Depth_train = training['Depth']
+Depth_test = test['Depth']
 
 Echogram_train = training['Echogram']
 CleanBottom_train = training['CleanBottom']
@@ -110,21 +111,21 @@ lastDepthIndex_test = last_depth_index(Echogram_test, shallow_index_test, deep_i
 ########## 1.3 - Getting a lighted version of Echogram
 
 ### For the training set
-(n,m) = Echogram_train.shape
-columns = np.arange(m)
+(n_train,m_train) = Echogram_train.shape
+columns = np.arange(m_train)
 echo_indices = list(zip(lastDepthIndex_train,columns))
 
-echolight_train = np.zeros(m)
-for kping in range(m):
+echolight_train = np.zeros(m_train)
+for kping in range(m_train):
     echolight_train[kping] = Echogram_train[echo_indices[kping]]
     
 ### For the test set
-(n,m) = Echogram_test.shape
-columns = np.arange(m)
+(n_test,m_test) = Echogram_test.shape
+columns = np.arange(m_test)
 echo_indices = list(zip(lastDepthIndex_test,columns))
 
-echolight_test = np.zeros(m)
-for kping in range(m):
+echolight_test = np.zeros(m_test)
+for kping in range(m_test):
     echolight_test[kping] = Echogram_test[echo_indices[kping]]
     
     
@@ -139,13 +140,13 @@ CleanBottom_test[deep_index_test] = 500
 
 ## Then we select for each ping the depth corresponding to 
 # the last non Nan value in Echogram
-pingDepth_train = np.zeros(m)
-for kping in range(m):
-    pingDepth_train[kping] = Depth[lastDepthIndex_train[kping]]
+pingDepth_train = np.zeros(m_train)
+for kping in range(m_train):
+    pingDepth_train[kping] = Depth_train[lastDepthIndex_train[kping]]
     
-pingDepth_test = np.zeros(m)
-for kping in range(m):
-    pingDepth_test[kping] = Depth[lastDepthIndex_test[kping]]    
+pingDepth_test = np.zeros(m_test)
+for kping in range(m_test):
+    pingDepth_test[kping] = Depth_test[lastDepthIndex_test[kping]]    
     
     
     
@@ -172,22 +173,22 @@ Y_test = pd.DataFrame(CleanBottom_test, columns = ['cleanBottom'])
 ## As you can see pingDepth and Y looks a lot similar
 # Let's plot both data
 ## Data from the training set
-pings = np.arange(m)
+pings = np.arange(m_train)
 plt.xlabel('Pings')
 plt.ylabel('Profondeur')
 plt.plot(pings,pingDepth_train)
 plt.plot(pings,Y_train)
 plt.legend(['PingDepth', 'CleanBottom']) 
-plt.title('Training Set')
+plt.title('Training Set 2015')
 
 ## Data from the test set
-pings = np.arange(m)
+pings = np.arange(m_test)
 plt.xlabel('Pings')
 plt.ylabel('Profondeur')
 plt.plot(pings,pingDepth_test)
 plt.plot(pings,Y_test)
-plt.legend(['PingDepth', 'CleanBottom'], loc='lower left') 
-plt.title('Test Set')
+plt.legend(['PingDepth', 'CleanBottom'], loc='lower right') 
+plt.title('Test Set 2011')
 
 
 
@@ -195,24 +196,11 @@ plt.title('Test Set')
 lm = LinearRegression()
 lm.fit(X_train,Y_train)
 
-Y_pred = lm.predict(X_test)
+Y_pred_test = lm.predict(X_test)
+Y_pred_train = lm.predict(X_train)
 
-# Measuring effectiveness of the linear model
-# Computing Mean Squared Error and Mean Absolute Error
+# Measuring effectiveness of the linear model, computing training and test error;
+# mae stand for Mean Absolute Error 
 
-mse = np.mean((Y_test-Y_pred)**2)
-mae = np.mean(abs(Y_test-Y_pred))
-
-
-## Testing within the same dataset
-X_train, X_test, Y_train, Y_test = train_test_split(X_train,Y_train, test_size = 0.10)
-lm = LinearRegression()
-lm.fit(X_train,Y_train)
-
-Y_pred = lm.predict(X_test)
-mse = np.mean((Y_test-Y_pred)**2)
-mae = np.mean(abs(Y_test-Y_pred))
-
-
-
-
+mae_train = np.mean(abs(Y_train-Y_pred_train))
+mae_test = np.mean(abs(Y_test-Y_pred_test))
