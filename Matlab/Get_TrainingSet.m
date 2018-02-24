@@ -15,7 +15,7 @@ Time = data.Time(1,RandomIndex);
 Echogram = data.Echogram18(:,RandomIndex);
 Depth = data.Depth18;
 
-cd('/Volumes/AWA_bck/2011/ConvertedHac/Cruise_2011/Treatment20170724_140100/DataFilterResults')
+cd('/Volumes/AWA_bck/2011/ConvertedHac/Cruise_2011/Treatment2017/DataFilterResults')
 data = matfile('Filtering.mat');
 CleanBottom = data.CleanBottom(1,RandomIndex);
 
