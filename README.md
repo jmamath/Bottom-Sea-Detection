@@ -7,39 +7,24 @@ Terabytes of acoustic multispectral data are routinely collected by oceanographi
 The overall goal of this work is to use machine learning and deep learning methods to automate the task of bottom sea recognition.
 ## Data
 Data has been provided by IRD (Institut de Recherche et Développement), it consists of two files 2011 and 2015 corresponding to two campaigns that took places in those years respectively. We can summarise the relevant information as follows:
-* 2011
-  * Echogram.mat ~ 28.26 GB
-  * Filtering.mat ~ 34.5 GB 
-* 2015
-  * Echogram.mat ~ 30.45 GB
-  * Filtering.mat ~ 47.12 GB
-
-The datasets and the procedure to get them is described in here /Data/Matecho_UserManual_18_05_2017.pdf. 
-A screenshot of the variables and a descriptive file are present in:
-* Data/2011 - three files Echogram_variables.jpg, Filtering_variables.jpg and Parameters_2011.txt
-* Data/2015 - three files Echogram_variables.jpg, Filtering_variables.jpg and Parameters_2015.txt
-
-After having discussed with the experts' team it seems that the following variables were relevant to learn from data: Time, Latitude, Longitude, Echogram, Depth, and CleanBottom. Echogram and Depth correspond respectively to Echogram18 and Depth18 since we always take the lowest frequency (18 kHz) to draw the bottom line (Mainly because low frequency goes deeper). 
+After having discussed with the experts' team it seems that the following variables were relevant to learn from data:Latitude, Longitude, Echogram, Depth, and CleanBottom. For our purpose we only select  the lowest frequency (18 kHz) to draw the bottom line (Mainly because it goes deeper).
 * Echogram is associated with Depth, in fact for every value of depth there is an echogram.
 * Depth is a grid with a regular spacing and each cell correspond to a value of depth in meters
 * CleanBottom are the values of the bottom set by the expert.
-* Time: numbers of seconds since January 1st, 1970.
+* Latitude
+* Longitude
+In summary, data can be viewed as a snapshot of the water where at each time (ping) we have diverse values. Hence we subset our training set using those variables.
 
-In summary, data can be viewed as a snapshot of the water where at each time (ping) we have diverse values.
-Hence we subset our training set using those variables. 
 
-### Subsetting Methodology
-Data has been given within a hard disk drive (HDD), so the following is made (for reproducibility purposes) to help someone with the same disk getting the same results.
-Here we have selected 100000 values, we provide Matlab scripts to subset a training set and a test set, both can be found in the folder Matlab. The interfaces for the user are the scripts `Get_TrainingSet.m` and `Get_TestSet.m`. There, one can change how many examples he wants (less or more than 100000). When executed the scripts output the dataset Training.mat and Test.mat in the root directory of the HDD. Here is how it looks:
+## Sampling Methodology
+We sampled 4 sets with the same settings, the first example was sampled randomly so that we could select a compact set preserving a continuity condition, (in other words subsequents pings):
+* Training_2011
+* Training_2015
+* Test_2011
+* Test_2015 
+Each training set have 100,000 examples, and each test set have 30,000 examples.
+It is possible to visualize the campaign with the image below. 
 
-| Name        | Size           | Class  |
-| ------------- |:-------------:| -----:|
-| CleanBottom      | (1,100000) | double |
-| Depth      | (1,2581)     |   double |
-| Latitude | (1,100000)      |  double |
-| Longitude | (1,100000)      |   double |
-| Echogram | (2581,100000)    |    single |
-| Time | (1,100000)     |    double |
 
 Since we are dealing with time series, and that there are 2661063 pings we made a script `RandSelectOne.m`
 (that must be present in each folder containing Echogram.mat and Filtering.mat) that randomly select a number between 1 and 2661063 so that you can subset 100000 straight values.
@@ -51,56 +36,309 @@ In summary we have 4 sets :
 * Training_2015.mat
 * Test_2015.mat
 
+![Alt text](Plots/Composition.jpg?raw=false "Training Set")
+
 ## Modeling Methodology
 
-### Feature Selection and Problem Settings
+### Introduction and Problem Setting
 Before starting any modeling we needed to know the kind of problem we may refer on.Clearly, we can frame it as a supervised learning problem, where the variable to predict is CleanBottom that we rename Y, doing so, our explanatory variable will be X a DataFrame with all other data without Depth. In summary
-* Y = CleanBottom 
-* X = Latitude, Longitude, Echogram, Time.
+* Y = CleanBottom
+* X = Latitude, Longitude, Echogram.
 
-We want our settings to be general enough to be applied to the data of the 2015 campaign. At first, we wanted to treat it as a multi-class classification problem with 2581 different classes. The problem with this approach is that it would not help us apply our model to data from a different distribution, in fact, the 2015 campaign as a different Depth structure, the spacing between the different values is different than 0.1916 and has different total values. Hence, in a first time, we opted for a regression problem. Then our error would be measured in meters.
+In a first time, we opted for a regression problem, in other words we want to evaluate the value of the bottom Y given X. Our error will be measured in meters.
+Hence we tried several models:
+* Linear regression (LR)
+* Shallow Neural Network (SNN)
+* Deep Neural Network (DNN)
+* Convolutional Neural Network (CNN)
+* Recurrent Neural Network (RNN)
 
-### Linear Model
-Following Occam's razor principle, we opted to fit a simple linear model to see how much we could explain just with linear assumptions.
+In the following paragraphs we will describe how the data were preprocessed in order to be fed in the models.
+
+### Data cleaning and Preprocessing 
+#### Data Cleaning
+In the following image we can see how the echogram looks like. The color gradient quantify the response of the pulse at each ping and at each depth. When the response of the sound pulse is very high the value had been changed to NA that is why it seems there is rectangles at the bottom of the image. The red line is the corrected bottom value given by the expert. 
+
+![Alt text](Plots/echo_example.jpg?raw=false "Training Set")
+
+Since our goal is to predict the “red line” using echogram informations here is what was done:
+* Removed all echogram value with NA values below the bottom sea. 
+* Selected 20 meters of echogram above this limit. Which correspond to 120 cells of echogram for each ping.
+* Removed all pings where the corrected bottom were deeper than 500m.
+
+The last action is motivated because the experts are interested only to predict values which are lower than 500 m.
+
+To illustrate what is the output of this data cleaning we give the example of the set Training_2011.  
+
+
+| Variable name | Size before cleaning        | Size after cleaning           | 
+|-------------|:-------------:|:-------------:|
+| CleanBottom | (100000,1)     | (79426, 1)| 
+| Latitude | (100000,1)     | (79426, 1)     |   
+| Longitude | (100000,1)| (79426, 1)     |  
+| Echogram | (100000, 2581) | (79426, 120)     |    
+|   Depth      | (100000, 2581)   |  (79426, 120)   |   
+
+The goal of this procedure is to focus on relevant data, and to avoid training models for too long. Now let’s describe how the data where stacked to be fed in each model.
+
 #### Preprocessing
-The experts are not interested in bottom values greater than 500m. CleanBottom have values greater than 500m that had been found with a complete version of Echogram, but the Echogram we got was sharped to the first 500m for data volume issues.
-Then we set all values of CleanBottom greater or equal than 500m to 500.
-There was still a problem, in fact, Echogram had too much data and had a lot of Nan values. What a problem at first revealed itself to be an opportunity. After some discussion with the experts, the origin of the Nan values was clear. In fact for example if we take an arbitrary ping and that the bottom is at 100m depth, all the values deeper in echogram will be Nan. We may then have a glimpse of the bottom values from Echogram just with the Nan distribution.
-Thus we created a new variable that gave at each ping the depth of the last non-Nan value we call it PingDepth.
-After some plotting, it seemed that both CleanBottom and PingDepth had the same structure.
+Keeping the training_2011 as an illustrative example, here is how we prepared the data for the models different models
 
-![Alt text](Plots/Training_2011.png?raw=false "Training Set")
-![Alt text](Plots/Test_2011.png?raw=false "Training Set")
+##### Linear Regression, Shallow Neural Network, Deep Neural Network
+| Name | Size         | Composed of           | 
+|-------------|:-------------:|:-------------:|
+| X_train| (79426, 242)    | Latitude, Longitude, Echogram, Depth| 
+| Y_train | (79426, 1)    | CleanBottom    |   
+
+The variables are simply stacked horizontally.
+
+##### Convolutional Neural Network
+
+| Name | Size         | Composed of           | 
+|-------------|:-------------:|:-------------:|
+| X_train| (79426, 120, 4)   | Latitude, Longitude, Echogram, Depth| 
+| Y_train | (79426, 1)    | CleanBottom    |  
+
+To feed the Convolutional network we instead stack Echogram and Depth horizontally, and we extend the Latitude and Longitude so that it has the same dimension to form a tensor. In some sense the information from Latitude and Longitude is repeated at each ping for 120 cells.
+
+##### Recurrent Neural Letwork
+
+| Name | Size         | Composed of           | 
+|-------------|:-------------:|:-------------:|
+| X_train| ( 794, 100, 242)  | Latitude, Longitude, Echogram, Depth| 
+| Y_train | ( 794, 100, 1)  | CleanBottom    |  
+
+The philosophy behind recurrent network is to provide data as sequence and to learn temporal relationships. But we also need our test set to be in the same format as our training set. 
+So from 79,426 examples we drop the 26 last examples to get 79,400 examples. Then we split it into 794 sequences of 100 examples. Each example being a 242 dimensional vector as for the LM. We made that sequence partitioning in order for the test set to be fed in the network.
+
+### Models
+
+The Linear Regression was run using sklearn, All the following neural network were built using keras. 
+#### Linear Regression
+
+```
+## Creating a LinearRegression object
+lm = LinearRegression()
+# Measuring time of training
+start = time.time()
+lm.fit(X_train,Y_train)
+end = time.time()
+regression_time = end-start
+
+Y_pred_test_lm = lm.predict(X_test)
+Y_pred_train_lm = lm.predict(X_train)
+
+# Measuring effectiveness of the linear model, computing training and test error;
+# mae stand for Mean Absolute Error 
+
+mae_train = np.mean(abs(Y_train-Y_pred_train_lm))
+mae_test = np.mean(abs(Y_test-Y_pred_test_lm))
+```
+
+#### Shallow Neural Network
+
+Here we tried a very basic model with one hidden layer and 4 neurons and no regularization.
+
+```
+# define base model
+
+def baseline_model():
+    # create model
+    model = Sequential()
+    model.add(Dense(4, input_dim=242, kernel_initializer="normal", bias_initializer='zeros', activation='relu'))  
+    model.add(Dense(1, kernel_initializer="normal", bias_initializer='zeros'))
+	# Compile model
+    model.compile(loss='mean_absolute_error', optimizer='adam')
+    return model
+
+snn = baseline_model()
+snn.summary()
+
+# Computing time on training
+
+start = time.time()
+history = snn.fit(X_train, Y_train, epochs = 12, batch_size = 1024, shuffle=True)
+end = time.time()
+SNN_time = end-start
 
 
-![Alt text](Plots/Training_2015.png?raw=false "Training Set")
-![Alt text](Plots/Test_2015.png?raw=false "Training Set")
+training_error = snn.evaluate(X_train,Y_train)
+test_error = snn.evaluate(X_test,Y_test)
+Y_pred_train_snn = snn.predict(X_train)
+Y_pred_test_snn = snn.predict(X_test)
+```
 
-We also changed Echogram to get Echolight, a lighted version of Echogram, for each ping we select only the value of the last non-Nan echo. In summary 
-* X = PingDepth, Echolight, Latitude, Longitude
-* Y = CleanBottom (with values greater than 500m set to 500m)
+##### SNN Summary
+```
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_1 (Dense)              (None, 4)                 972       
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 5         
+=================================================================
+Total params: 977
+Trainable params: 977
+Non-trainable params: 0
+_________________________________________________________________
+```
 
-We removed Time because it has some Nan values.
-Then we fitted the model using sklearn a machine learning module in Python.
+#### Deep Neural Network
+
+I called this model DNN but it is just deeper than the first neural network, and I added a regularization function
+
+```
+def baseline_model():
+    # create model
+    model = Sequential()
+    model.add(Dense(240, input_dim=242, kernel_initializer="normal", bias_initializer='zeros', activation='relu'))
+    model.add(Dense(120, kernel_initializer="normal", bias_initializer='zeros', activation='relu'))
+    model.add(Dense(60, kernel_initializer="normal", bias_initializer='zeros', activation='relu'))
+    model.add(Dense(30, kernel_initializer="normal", bias_initializer='zeros'))
+    model.add(Dense(15, kernel_initializer="normal", bias_initializer='zeros'))    
+    model.add(Dense(7, kernel_initializer="normal", bias_initializer='zeros'))    
+    model.add(Dense(1, kernel_initializer="normal", bias_initializer='zeros',kernel_regularizer=regularizers.l1(0.7)))
+	# Compile model
+    model.compile(loss='mean_absolute_error', optimizer='adam')
+    return model
+
+dnn = baseline_model()
+dnn.summary()
+## Measuring time performance
+start = time.time()
+history = dnn.fit(X_train, Y_train, epochs = 12, batch_size = 1024, shuffle=True)
+end = time.time()
+DNN_time = end-start
 
 
-## First Results and Remarks
-Since our goal is to build a model being able to detect bottom sea form further campaign, we need our model to have good performances whatever the dataset we use. So we tried to fit different dataset in our linear regression with the following results. (The error computed is the Mean Absolute Error MAE) 
 
-| Case | Training Set        | Test Set           | Training Error  | Test Error |
-|-------------|:-------------:|:-------------:| -----:| -----:|
-| 1 | 2011      | 2011 | 5.982 | 6.088 |
-| 2 | 2015      | 2015     |   30.666 | 49.767 |
-| 3 | 2011 | 2015      |  5.982 | 65.662 |
-| 4 | 2015 | 2011      |   30.666 | 73.380|
+training_error = dnn.evaluate(X_train,Y_train)
+test_error = dnn.evaluate(X_test,Y_test)
+Y_pred_train_dnn = dnn.predict(X_train)
+Y_pred_test_dnn = dnn.predict(X_test)
+```
+##### DNN Summary
 
-We notice that a linear model is quite good to explain the data of 2011, but that's not the case for other combinations.
-In the case 2 and 4 the model suffers from high bias and high variance, and in case 3 it suffers from high variance.
+```
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_10 (Dense)             (None, 240)               58320     
+_________________________________________________________________
+dense_11 (Dense)             (None, 120)               28920     
+_________________________________________________________________
+dense_12 (Dense)             (None, 60)                7260      
+_________________________________________________________________
+dense_13 (Dense)             (None, 30)                1830      
+_________________________________________________________________
+dense_14 (Dense)             (None, 15)                465       
+_________________________________________________________________
+dense_15 (Dense)             (None, 7)                 112       
+_________________________________________________________________
+dense_16 (Dense)             (None, 1)                 8         
+=================================================================
+Total params: 96,915
+Trainable params: 96,915
+Non-trainable params: 0
+_________________________________________________________________
+```
 
-At that point my remarks are the following:
-* We might start working with all the available distributions if we really want to build a robust system. (Not necessary all the data but a subset of all the available distributions.)
-* The case 2 and 4 highlights that a linear regression won't be complex enough to fully capture a good representation of the bottom sea. Hence, we have a decent reason to start trying models with higher capacity such as neural networks.
+#### Convolutional Neural Network
+Only one convolutional layer was used followed by a Max Pooling before flatten the result and give it to a fully connected  neural network. Notice that it follow the same parametrization as our SNN model. The goal was to learn with as few parameters as possible.
+```
+# define base model
+def conv_model():
+    # create model
+    model = Sequential()
+    model.add(Conv1D(input_shape=[120,4], filters=1, kernel_size=20, strides=1, activation='relu'))
+    model.add(BatchNormalization(axis=-1))
+    model.add(MaxPooling1D(pool_size=20, strides=1, padding='valid'))  
+    model.add(BatchNormalization(axis=-1))
+    model.add(Flatten())
+    model.add(Dense(4, kernel_initializer="normal", bias_initializer='zeros', activation='relu'))  
+    model.add(Dense(1, kernel_initializer="normal", bias_initializer='zeros',kernel_regularizer=regularizers.l1(0.7)))
+    model.compile(loss='mean_absolute_error', optimizer='adam')
+    return model
 
+cnn = conv_model()
+cnn.summary()
 
+## Measuring time performance
+start = time.time()
+history = cnn.fit(X_train, Y_train, epochs = 26, batch_size = 1024, shuffle=True)
+end = time.time()
+CNN_time = end-start
 
+training_error = cnn.evaluate(X_train,Y_train)
+test_error = cnn.evaluate(X_test,Y_test)
+Y_pred_train_cnn = cnn.predict(X_train)
+Y_pred_test_cnn = cnn.predict(X_test)
+```
 
+##### Convolutional Neural Network Summary
+
+```
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv1d_3 (Conv1D)            (None, 101, 1)            81        
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 101, 1)            4         
+_________________________________________________________________
+max_pooling1d_2 (MaxPooling1 (None, 82, 1)             0         
+_________________________________________________________________
+batch_normalization_4 (Batch (None, 82, 1)             4         
+_________________________________________________________________
+flatten_2 (Flatten)          (None, 82)                0         
+_________________________________________________________________
+dense_19 (Dense)             (None, 4)                 332       
+_________________________________________________________________
+dense_20 (Dense)             (None, 1)                 5         
+=================================================================
+Total params: 426
+Trainable params: 422
+Non-trainable params: 4
+_________________________________________________________________
+```
+
+#### Recurrent Neural Network
+We used a bidirectional GRU layer over sequences of 100 examples in order for the network to be sensitive to sudden trenches.
+The network take longuer to train, here 200 epoch to have fairly good results.
+```
+# define model
+def model():
+    # create model
+    model = Sequential()        
+    model.add(Bidirectional(GRU(4, return_sequences=True), input_shape=[pgcd,n]))
+    model.add(TimeDistributed(Dense(4, kernel_initializer="normal", bias_initializer='zeros', activation='tanh')))
+    model.add(TimeDistributed(Dense(1, kernel_initializer="normal", bias_initializer='zeros',kernel_regularizer=regularizers.l2(0.01))))     
+    # Compile model
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+    
+rnn = model()
+rnn.summary()
+
+## Measuring time performance
+start = time.time()
+history = rnn.fit(X_train, Y_train, epochs = 200, batch_size = 512, shuffle=False)
+end = time.time()
+RNN_time = end-start
+
+training_error = cnn.evaluate(X_train,Y_train)
+test_error = cnn.evaluate(X_test,Y_test)
+Y_pred_train_cnn = cnn.predict(X_train)
+Y_pred_test_cnn = cnn.predict(X_test)
+```
+##### Recurrent Neural Network Summary
+```
+Layer (type)                 Output Shape              Param #   
+=================================================================
+bidirectional_2 (Bidirection (None, 100, 8)            5928      
+_________________________________________________________________
+time_distributed_6 (TimeDist (None, 100, 4)            36        
+_________________________________________________________________
+time_distributed_7 (TimeDist (None, 100, 1)            5         
+=================================================================
+Total params: 5,969
+Trainable params: 5,969
+Non-trainable params: 0
+_________________________________________________________________
+```
