@@ -10,7 +10,7 @@ Note that this work is still in progress, and is planned to be finished at the e
 For example the scripts relative to the preprocessing have not been included, only the models.
 
 ## MODELS
-Five models can be used as scripts:
+Six models can be used as scripts:
 
 - Linear_regression.py : linear regression
 - ShallowNN.py : shallow neural network
@@ -18,6 +18,9 @@ Five models can be used as scripts:
 - ConvNN.py : convolutional neural network
 - RecurrentNN.py : Recurrent neural network
 - VariableNN.py : One hidden layer neural network with automatically tuned hyperparameters
+
+Only the models with manual hyper parameter tuning have been compared and described in the document
+**Bottom Sea Estimation with Deep Learning Methods.pdf**
 
 ## DATA
 The data is already preprocessed, two data files are available:
@@ -30,9 +33,9 @@ for it.
 ## HOW TO USE THE SCRIPTS?
 All the scripts share the same structure. They are divided into three subpart
 
-0 - Import the relevant libraries
-1 - Load datasets
-2 - Model
+- 0 Import the relevant libraries
+- 1 Load datasets
+- 2 Model
 
 Among those parts, the section Model is worth some comments:
 The models are run with 2011 data and 2015 data
